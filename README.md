@@ -1,0 +1,2 @@
+# M5Unified_AI_StackChan_Lite
+必要最小限の機能の軽量化AIｽﾀｯｸﾁｬﾝです。
