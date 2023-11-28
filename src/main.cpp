@@ -391,6 +391,29 @@ void hardware_model_check(){
   Serial.println(name);
 }
 */
+#if defined (ARDUINO_M5Stack_CORES3)
+struct box_t
+{
+  int x;
+  int y;
+  int w;
+  int h;
+  int touch_id = -1;
+
+  void setupBox(int x, int y, int w, int h) {
+    this->x = x;
+    this->y = y;
+    this->w = w;
+    this->h = h;
+  }
+  bool contain(int x, int y)
+  {
+    return this->x <= x && x < (this->x + this->w)
+        && this->y <= y && y < (this->y + this->h);
+  }
+};
+static box_t box_stt;
+#endif
 
 void setup()
 { 
@@ -470,6 +493,41 @@ void setup()
   serializeJson(chat_doc, InitBuffer);
 
   Avatar_setup();
+
+#if defined (ARDUINO_M5Stack_CORES3)
+  box_stt.setupBox(0, 0, M5.Display.width(), 60);
+#endif
+}
+
+void chatMain()
+{
+  M5.Speaker.tone(1000, 100);
+  delay(1000);
+  avatar.setExpression(Expression::Happy);
+  avatar.setSpeechText("御用でしょうか？");
+  M5.Speaker.end();
+  String ret;
+  if(OPENAI_API_KEY != STT_API_KEY){
+    Serial.println("Google STT");
+    ret = SpeechToText(true);
+  } else {
+    Serial.println("Whisper STT");
+    ret = SpeechToText(false);
+  }
+  Serial.println("音声認識終了");
+  Serial.println("音声認識結果");
+  if(ret != "") {
+    Serial.println(ret);
+      exec_chatGPT(ret);
+  } else {
+    Serial.println("音声認識失敗");
+    avatar.setExpression(Expression::Sad);
+    avatar.setSpeechText("聞き取れませんでした");
+    delay(2000);
+    avatar.setSpeechText("");
+    avatar.setExpression(Expression::Neutral);
+  } 
+  M5.Speaker.begin();
 }
 
 void loop()
@@ -477,35 +535,25 @@ void loop()
   static int lastms = 0;
 
   M5.update();
+
+#if defined( ARDUINO_M5Stack_CORES3 )
+  auto count = M5.Touch.getCount();
+  if (count)
+  {
+    auto t = M5.Touch.getDetail();
+    if (t.wasPressed())
+    {          
+      if (box_stt.contain(t.x, t.y))
+      {
+        chatMain();
+      }
+    }
+  }
+#endif
+
   if (M5.BtnA.wasPressed())
   {
-    M5.Speaker.tone(1000, 100);
-        delay(1000);
-        avatar.setExpression(Expression::Happy);
-        avatar.setSpeechText("御用でしょうか？");
-        M5.Speaker.end();
-        String ret;
-        if(OPENAI_API_KEY != STT_API_KEY){
-          Serial.println("Google STT");
-          ret = SpeechToText(true);
-        } else {
-          Serial.println("Whisper STT");
-          ret = SpeechToText(false);
-        }
-        Serial.println("音声認識終了");
-        Serial.println("音声認識結果");
-        if(ret != "") {
-          Serial.println(ret);
-            exec_chatGPT(ret);
-        } else {
-          Serial.println("音声認識失敗");
-          avatar.setExpression(Expression::Sad);
-          avatar.setSpeechText("聞き取れませんでした");
-          delay(2000);
-          avatar.setSpeechText("");
-          avatar.setExpression(Expression::Neutral);
-        } 
-        M5.Speaker.begin();
+    chatMain();
   }
 
   if(speech_text != ""){

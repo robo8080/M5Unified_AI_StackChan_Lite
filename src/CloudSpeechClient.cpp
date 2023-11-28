@@ -34,7 +34,7 @@ void CloudSpeechClient::PrintHttpBody2(Audio* audio) {
     enc = base64::encode((byte*)&wavData[j*audio->record_length*2], audio->record_length*2);
     enc.replace("\n", "");// delete last "\n"
     client.print(enc);    //Serial.print(enc); // HttpBody2
-    delay(10);
+    //delay(10);
   } 
 //  Serial.printf("PrintHttpBody2=%d",len);
 }
