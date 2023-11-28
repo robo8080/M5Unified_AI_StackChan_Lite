@@ -19,7 +19,6 @@ AIｽﾀｯｸﾁｬﾝがしゃべる動画を投稿するときは下記の様
 * M5Stack Core2
 
 ### プログラムをビルドするのに必要な物 ###
-* [M5Stack Core2](http://www.m5stack.com/ "Title")<br>
 * VSCode<br>
 * PlatformIO<br>
 
